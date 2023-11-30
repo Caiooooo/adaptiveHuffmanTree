@@ -225,13 +225,9 @@ void AdaptiveHuffmanTree::find_leader(AdaptiveHuffmanNode *crrNode, int weight, 
         // std::cout<<leader->getnumber();
     }
     if (crrNode->getleft() != nullptr)
-    {
         find_leader(crrNode->getleft(), weight, &*number, parent_number, &*leader);
-    }
     if (crrNode->getright() != nullptr)
-    {
         find_leader(crrNode->getright(), weight, &*number, parent_number, &*leader);
-    }
     return;
 }
 bool my_sort(std::pair<int, AdaptiveHuffmanNode *> p, std::pair<int, AdaptiveHuffmanNode *> q)
@@ -241,36 +237,14 @@ bool my_sort(std::pair<int, AdaptiveHuffmanNode *> p, std::pair<int, AdaptiveHuf
 void queueing_node(AdaptiveHuffmanNode *now, std::vector<std::pair<int, AdaptiveHuffmanNode *>> *queue, int deep)
 {
     (*queue).push_back(std::make_pair(deep, now));
-
     if (now->getright() != NULL)
-    {
         queueing_node(now->getright(), &*queue, deep + 1);
-    }
-
     if (now->getleft() != NULL)
-    {
         queueing_node(now->getleft(), &*queue, deep + 1);
-    }
-
     return;
 }
 void AdaptiveHuffmanTree::setNumber()
 {
-    // bfs to set number
-    // std::queue<AdaptiveHuffmanNode *> q;
-    // q.push(root);
-    // int num = 512;
-    // while (!q.empty())
-    // {
-    //     AdaptiveHuffmanNode *crrNode = q.front();
-    //     q.pop();
-    //     if (crrNode->getright() != nullptr)
-    //         q.push(crrNode->getright());
-    //     if (crrNode->getleft() != nullptr)
-    //         q.push(crrNode->getleft());
-    //     num--;
-    //     crrNode->setnumber(num);
-    // }
     //dfs to set number
     std::vector<std::pair<int, AdaptiveHuffmanNode *>> my_pair;
     queueing_node(root, &my_pair, 0);
@@ -278,36 +252,7 @@ void AdaptiveHuffmanTree::setNumber()
 
     int num = 512;
     for (int i = 0; i < my_pair.size(); i++)
-    {
         my_pair.at(i).second->setnumber(--num);
-    }
-
-    my_pair.clear();
-}
-void AdaptiveHuffmanTree::printTree() // debugging
-{
-    std::cout << "\n\n";
-    std::queue<std::pair<AdaptiveHuffmanNode *, int>> q;
-    q.push({root, 1});
-    int layer = 1;
-    while (!q.empty())
-    {
-        if (layer != q.front().second)
-        {
-            std::cout << '\n';
-            layer = q.front().second;
-        }
-        AdaptiveHuffmanNode *crrNode = q.front().first;
-        if (crrNode->getright() != nullptr)
-            q.push({crrNode->getright(), q.front().second + 1});
-        if (crrNode->getleft() != nullptr)
-            q.push({crrNode->getleft(), q.front().second + 1});
-        q.pop();
-        if (crrNode->getdata())
-            std::cout << "|" << crrNode->getdata() << ' ';
-        else
-            std::cout << "|" << crrNode->getnumber() << " ";
-    }
 }
 // destroy
 void AdaptiveHuffmanTree::deleteHuffmanTree(AdaptiveHuffmanNode *crrNode)
