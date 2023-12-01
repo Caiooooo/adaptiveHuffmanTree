@@ -3,12 +3,8 @@
 
 void AdaptiveHuffmanNode::swap(AdaptiveHuffmanNode *node)
 {
-    bool crrisLeft = false;
-    bool nodeisLeft = false;
-    if (this->parent->getleft()->getnumber() == this->getnumber())
-        crrisLeft = true;
-    if (node->parent->getleft()->getnumber() == node->getnumber())
-        nodeisLeft = true;
+    bool crrisLeft = (this->parent->getleft()->getnumber() == this->getnumber());
+    bool nodeisLeft = (node->parent->getleft()->getnumber() == node->getnumber());
     AdaptiveHuffmanNode *crrparent = this->getparent();
     AdaptiveHuffmanNode *nodeparent = node->getparent();
     if (crrisLeft && nodeisLeft)

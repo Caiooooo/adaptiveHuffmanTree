@@ -71,7 +71,7 @@ ziptool.exe
 
 下图演示了一个文件及其二进制表示
 
-![image-20231130151106755](image-20231130151106755.png)
+![images/image-20231130151106755](images/image-20231130151106755.png)
 
 C++提供了bit层面的数据操作<<和>>
 
@@ -107,7 +107,7 @@ void zip::write8bits(std::ofstream *outfile, std::queue<char> *code)
 ```c++
 void unzip::read8bits(std::ifstream *file, std::queue<char> *code_read)
 {
-	char temp = 0x00;
+	unsigned char temp = 0x00;
 	if ((*file).get(temp))
 	{
 		for (int i = 0; i < 8; i++)
@@ -123,32 +123,45 @@ void unzip::read8bits(std::ifstream *file, std::queue<char> *code_read)
 }
 ```
 
-### 注意！！！！
+### 注意（重要）！！！！
 
 由于经过动态哈夫曼编码后的bit流不是8的倍数，不一定能保证最后都能通过字节写入，然而文件的最小写入单位是字节，这就需要我们在最后补零，如:1000 01 -> 1000 0100
 
-补零的个数由整个文件的第一个字节描述，这个数字表示最后补零的数量。若第一个字节为0000 0010则表示最后补了两个0
+补零的个数由整个**文件的第一个字节描述**，这个数字表示最后补零的数量。若第一个字节为0000 0010则表示最后补了两个0，可以通过以下代码获取末尾补零数量
 
-### 动态哈夫曼编码粗讲
+```c++
+unsigned char temp = 0x00;
+(*file).get(temp);
+int num = (int)temp
+```
+
+
 
 
 
 ## 代码介绍
 
 源文件有五个代码，你要完成的时unzip.cpp中的源码开发**(TODO)**，其中
+
+#### main.cpp
+
+用于交互
+
+#### zip.cpp
+
+用于存放zip类：主要用来操作文件读写
+
+其中第一个字节为偏移量，表示最后补零的个数。
+
+不断读取字符后动态建树
+
+#### unzip.cpp
+
+**TODO：**解压
+
 #### AdaptiveHuffmanNode.cpp
 
-##### 私有变量
-
-包含当前节点存放的字符data，字符数量weight，当前节点编号number，左子节点left，右子节点right，父亲节点parent
-
-##### swap 函数
-
-交换当前节点以及所有该节点的子节点，如1.swap(4)
-
-<img src="images/graph%20(1).png" alt="graph (1)" style="zoom: 40%;" /><img src="images/graph.png" alt="graph" style="zoom: 40%;" />
-
-##### 其他函数
+##### 其头文件
 
 ```c++
     AdaptiveHuffmanNode(char data, int weight, AdaptiveHuffmanNode *left,AdaptiveHuffmanNode *right, AdaptiveHuffmanNode *parent)
@@ -170,25 +183,127 @@ void unzip::read8bits(std::ifstream *file, std::queue<char> *code_read)
     void swap(AdaptiveHuffmanNode *node);
     void addweight();
 ```
+##### 私有变量
+
+包含当前节点存放的字符data，字符数量weight，当前节点编号number，左子节点left，右子节点right，父亲节点parent
+
+##### swap 函数
+
+交换当前节点以及所有该节点的子节点，如1.swap(4)
+
+<img src="images/graph%20(1).png" alt="graph (1)" style="zoom: 40%;" /><img src="images/graph.png" alt="graph" style="zoom: 40%;" />
+
 
 #### AdaptiveHuffmanTree.cpp(核心代码)
 
 整个树的整体，用来存放以及更新哈夫曼树，以及获取哈夫曼编码。
 
-#### main.cpp
+##### 其头文件
 
-用于交互
+```c++
+class AdaptiveHuffmanTree
+{
+private:
+    AdaptiveHuffmanNode *root; //存储根节点
+    AdaptiveHuffmanNode *NYT;  //存储NYT节点
+    unsigned short offset;     //存储偏移量，用于计数文件最后补零个数
+    unsigned char dictionary[257];   //字符字典，用于查看带输入的字符是否以及被输入过
 
-#### zip.cpp
+public:
+    AdaptiveHuffmanTree();      //构造函数
+    AdaptiveHuffmanNode *getroot() { return root; }
+    unsigned short getoffset() { return offset; }
+    void setoffset(unsigned short) { this->offset = offset; }
+    int getnum();
+    AdaptiveHuffmanNode *getleft() { return root->getleft(); }
+    AdaptiveHuffmanNode *getright() { return root->getright(); }
+    //获取已经存在的字符的哈夫曼编码
+    void get_code_exist(AdaptiveHuffmanNode *crrNode, const char buffer, char *addcode, std::queue<char> *code); 
+    //获取不存在的字符的哈夫曼编码，具体规则见视频
+    void get_code_doesnt_exist(AdaptiveHuffmanNode *crrNode, const char buffer, char *addcode, std::queue<char> *code); 
+    char getdata() { return root->getdata(); }
+    // 获取当前字符对应哈夫曼编码，并调用更新函数
+    void encode(unsigned char buffer, std::queue<char> *code); 
+    // 更新树 代码后面解释
+    void update(unsigned char buffer); 
+     //找到data==buffer的节点
+    AdaptiveHuffmanNode *find_node(AdaptiveHuffmanNode *crrNode, const char buffer); 
+    // 找到相同weight中number最大的节点
+    void find_leader(AdaptiveHuffmanNode *crrNode, int weight, int *number, int parent_number, AdaptiveHuffmanNode **leader); 
+    void setNumber(); // give number to each node
+    void printTree(); // 用于查看树
+    // destruct
+    void deleteHuffmanTree(AdaptiveHuffmanNode *crrNode); //释放动态内存
+    ~AdaptiveHuffmanTree();
+};
+```
 
-用于存放zip类：主要用来操作文件读写
+##### encode函数
 
-其中第一个字节
+获取当前字符对应的哈夫曼编码，并调用更新函数。
 
-#### unzip.cpp
+```c++
+char init[1] = {'\0'};
+if (dictionary[(int)buffer] == 0x01)
+    this->get_code_exist(root, buffer, init, code);
+else
+    this->get_code_doesnt_exist(root, buffer, init, code);
+this->update(buffer);
+```
 
-TODO：解压
+##### update函数（伪代码）
 
-### 
+###### **伪代码1**
 
-### 
+```
+获取当前字符对应节点
+如果节点不存在
+	则创建节点
+如果存在：
+	获取相同权重下number最大的节点a
+	p和a进行交换
+	则更新节点权重
+
+令节点 p 为新插入或新根新的节点
+当 p 不为根节点时：
+	p = p的父亲
+	获取相同权重下number最大的节点a
+	p和a进行交换
+```
+###### **伪代码2**
+
+```c++
+algorithm for adding a symbol is
+    leaf_to_increment := NULL
+    p := pointer to the leaf node containing the next symbol
+
+    if (p is NYT) then
+        Extend p by adding two children
+        Left child becomes new NYT and right child is the new symbol leaf node
+        p := parent of new symbol leaf node
+        leaf_to_increment := Right Child of p
+    else
+        Swap p with leader of its block
+        if (new p is sibling to NYT) then
+            leaf_to_increment := p
+            p := parent of p
+
+    while (p ≠ NULL) do
+        Slide_And_Increment(p)
+
+    if (leaf_to_increment != NULL) then
+        Slide_And_Increment(leaf_to_increment)
+        
+function Slide_And_Increment(p) is
+    previous_p := parent of p
+
+    if (p is an internal node) then
+        Slide p in the tree higher than the leaf nodes of weight wt + 1
+        increase weight of p by 1
+        p := previous_p
+    else
+        Slide p in the tree higher than the internal nodes of weight wt
+        increase weight of p by 1
+        p := new parent of p.
+```
+

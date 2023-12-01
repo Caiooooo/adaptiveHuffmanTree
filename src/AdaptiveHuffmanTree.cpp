@@ -17,7 +17,7 @@ AdaptiveHuffmanTree::AdaptiveHuffmanTree()
 void AdaptiveHuffmanTree::encode(unsigned char buffer, std::queue<char> *code)
 {
     char init[1] = {'\0'};
-    
+
     // std::cout<<(int)buffer<<' ';
     if (dictionary[(int)buffer] == 0x01)
         this->get_code_exist(root, buffer, init, code);
@@ -32,7 +32,7 @@ void AdaptiveHuffmanTree::encode(unsigned char buffer, std::queue<char> *code)
 void AdaptiveHuffmanTree::get_code_exist(AdaptiveHuffmanNode *crrNode, const char buffer, char *addcode, std::queue<char> *code)
 {
     // found
-    if (crrNode->getdata() == buffer&& crrNode->getleft() == NULL && crrNode->getright() == NULL && crrNode->getweight() != 0)
+    if (crrNode->getdata() == buffer && crrNode->getleft() == NULL && crrNode->getright() == NULL && crrNode->getweight() != 0)
     {
         for (int i = 0; i < strlen(addcode); i++)
         {
@@ -61,10 +61,7 @@ void AdaptiveHuffmanTree::get_code_doesnt_exist(AdaptiveHuffmanNode *crrNode, ch
     if (crrNode->getweight() == 0 && crrNode->getleft() == NULL && crrNode->getright() == NULL)
     {
         for (int i = 0; i < strlen(addcode); i++)
-        {
-            // std::cout << addcode[i] ;
             code->push(addcode[i]);
-        }
         for (int i = 0; i < 8; i++)
         {
             if ((buffer & 0x80) == 0x80)
@@ -78,22 +75,15 @@ void AdaptiveHuffmanTree::get_code_doesnt_exist(AdaptiveHuffmanNode *crrNode, ch
     char temp[strlen(addcode) + 1];
     strcpy(temp, addcode);
     if (crrNode->getleft() != nullptr)
-    {
-        strcat(temp, "0");
-        get_code_doesnt_exist(crrNode->getleft(), buffer, temp, code);
-    }
+        get_code_doesnt_exist(crrNode->getleft(), buffer, strcat(temp, "0"), code);
     strcpy(temp, addcode);
     if (crrNode->getright() != nullptr)
-    {
-        strcat(temp, "1");
-        get_code_doesnt_exist(crrNode->getright(), buffer, temp, code);
-    }
+        get_code_doesnt_exist(crrNode->getright(), buffer, strcat(temp, "1"), code);
 }
 void AdaptiveHuffmanTree::update(unsigned char buffer)
 {
 
     AdaptiveHuffmanNode *now = nullptr;
-    AdaptiveHuffmanNode *todel;
     if (dictionary[(int)buffer])
     {
         /*
@@ -114,10 +104,8 @@ void AdaptiveHuffmanTree::update(unsigned char buffer)
         // swap p with leader of its block
         // std::cout << "shenmegui" << leader->getdata() << std::endl;
         if (leader != nullptr)
-        {
             // std::cout << "zhaodaole:" << leader->getparent()->getnumber();
             node->swap(leader);
-        }
         // for leaves: move first then update
         node->addweight();
     }
@@ -202,18 +190,12 @@ AdaptiveHuffmanNode *AdaptiveHuffmanTree::find_node(AdaptiveHuffmanNode *crrNode
     if (crrNode == nullptr)
         return nullptr;
     if (crrNode->getdata() == buffer && crrNode->getleft() == nullptr && crrNode->getright() == nullptr && crrNode->getweight() != 0)
-    {
         return crrNode;
-    }
     AdaptiveHuffmanNode *temp;
     if ((temp = find_node(crrNode->getleft(), buffer)) != nullptr)
-    {
         return temp;
-    }
     if ((temp = find_node(crrNode->getright(), buffer)) != nullptr)
-    {
         return temp;
-    }
     return nullptr; // never used
 }
 void AdaptiveHuffmanTree::find_leader(AdaptiveHuffmanNode *crrNode, int weight, int *number, int parent_number, AdaptiveHuffmanNode **leader)
@@ -234,20 +216,20 @@ bool my_sort(std::pair<int, AdaptiveHuffmanNode *> p, std::pair<int, AdaptiveHuf
 {
     return p.first < q.first;
 }
-void queueing_node(AdaptiveHuffmanNode *now, std::vector<std::pair<int, AdaptiveHuffmanNode *>> *queue, int deep)
+void dfs_node(AdaptiveHuffmanNode *now, std::vector<std::pair<int, AdaptiveHuffmanNode *>> *queue, int deep)
 {
     (*queue).push_back(std::make_pair(deep, now));
     if (now->getright() != NULL)
-        queueing_node(now->getright(), &*queue, deep + 1);
+        dfs_node(now->getright(), &*queue, deep + 1);
     if (now->getleft() != NULL)
-        queueing_node(now->getleft(), &*queue, deep + 1);
+        dfs_node(now->getleft(), &*queue, deep + 1);
     return;
 }
 void AdaptiveHuffmanTree::setNumber()
 {
-    //dfs to set number
+    // dfs to set number
     std::vector<std::pair<int, AdaptiveHuffmanNode *>> my_pair;
-    queueing_node(root, &my_pair, 0);
+    dfs_node(root, &my_pair, 0);
     std::sort(my_pair.begin(), my_pair.end(), my_sort);
 
     int num = 512;
