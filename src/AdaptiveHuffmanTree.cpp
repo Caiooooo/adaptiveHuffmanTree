@@ -29,6 +29,113 @@ void AdaptiveHuffmanTree::encode(unsigned char buffer, std::queue<char> *code)
     // std::cout<<"upsucess"<<' ';
     // write to file
 }
+
+void AdaptiveHuffmanTree::get_char_from_code(std::queue<char> *code_read, unsigned char *character)
+{
+    unsigned char temp;
+    temp &= 0x00;
+    for (int i = 0; i < 8; i++)
+    {
+        if ((*code_read).front() == '1')
+        {
+            temp ^= 0x01;
+        }
+        if (i != 7)
+        {
+            temp <<= 1;
+        }
+        (*code_read).pop();
+    }
+    character[0] = temp;
+    return;
+}
+
+bool AdaptiveHuffmanTree::readfile(std::ifstream *file, std::queue<char> *code_read)
+{
+    char temp;
+    temp &= 0x00;
+    if ((*file).get(temp))
+    {
+        for (int i = 0; i < 8; i++)
+        {
+            if ((temp & 0x80) == 0x80)
+            {
+                (*code_read).push('1');
+            }
+            else
+            {
+                (*code_read).push('0');
+            }
+            temp <<= 1;
+        }
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+void AdaptiveHuffmanTree::write(std::ofstream *file, unsigned char symbol)
+{
+    *file << symbol;
+    return;
+}
+
+void AdaptiveHuffmanTree::decode(std::queue<char> *code_read, unsigned short offset, std::ofstream *outfile, std::ifstream *file, bool *oke)
+{
+    AdaptiveHuffmanNode *temp = root;
+    while ((*code_read).size() < 32 && *oke)
+    {
+        *oke = readfile(&*file, &*code_read);
+    }
+    if (temp == nullptr)
+    {
+        unsigned char symbol[1];
+        get_char_from_code(&*code_read, symbol);
+        write(&*outfile, symbol[0]);
+        // call update procedure
+        update(symbol[0]);
+    }
+    else
+    {
+        while (temp->getleft() != nullptr && temp->getright() != nullptr && (*code_read).size() > offset)
+        {
+            if ((*code_read).front() == '0')
+            {
+                temp = temp->getleft();
+                (*code_read).pop();
+            }
+            else
+            {
+                temp = temp->getright();
+                (*code_read).pop();
+            }
+            while ((*code_read).size() < 32 && *oke)
+            {
+                *oke = readfile(&*file, &*code_read);
+            }
+        }
+        if ((*code_read).size() == offset && temp->getleft() != NULL && temp->getright() != NULL)
+        {
+            return;
+        }
+        if (temp->getweight() == 0)
+        {
+            unsigned char symbol[1];
+            get_char_from_code(&*code_read, symbol);
+            write(&*outfile, symbol[0]);
+            update(symbol[0]);
+        }
+        else
+        {
+            write(&*outfile, temp->getdata());
+            update(static_cast<unsigned char>(temp->getdata()));
+        }
+    }
+    return;
+}
+
 void AdaptiveHuffmanTree::get_code_exist(AdaptiveHuffmanNode *crrNode, const char buffer, char *addcode, std::queue<char> *code)
 {
     // found

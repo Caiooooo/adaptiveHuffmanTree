@@ -1,3 +1,0 @@
-F:/SoCoding/C++zipAlg/build/CMakeFiles/ziptool.dir
-F:/SoCoding/C++zipAlg/build/CMakeFiles/edit_cache.dir
-F:/SoCoding/C++zipAlg/build/CMakeFiles/rebuild_cache.dir
